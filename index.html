@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Engenharia</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-dark: #1a1a1a;
+            --primary-medium: #2d2d2d;
+            --primary-light: #3a3a3a;
+            --accent-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --text-light: #ecf0f1;
+            --text-medium: #bdc3c7;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-medium) 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(to right, var(--accent-color), #3498db);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            color: var(--accent-color);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info span {
+            color: var(--text-medium);
+        }
+
+        .logout-btn {
+            background-color: var(--primary-light);
+            color: var(--text-light);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: var(--danger-color);
+        }
+
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            background-color: var(--primary-light);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background-color: var(--primary-medium);
+            border: none;
+            color: var(--text-medium);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .nav-tab.active {
+            background-color: var(--accent-color);
+            color: var(--primary-dark);
+        }
+
+        .nav-tab:hover:not(.active) {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .card {
+            background-color: var(--primary-light);
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+        }
+
+        .card h2 {
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2 i {
+            font-size: 1.3rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-medium);
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: var(--text-light);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: var(--primary-dark);
+        }
+
+        .btn-primary:hover {
+            background-color: #27ae60;
+        }
+
+        .btn-secondary {
+            background-color: var(--primary-medium);
+            color: var(--text-light);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .data-table th {
+            background-color: var(--primary-medium);
+            color: var(--accent-color);
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .data-table tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-high {
+            background-color: var(--accent-color);
+        }
+
+        .status-low {
+            background-color: var(--danger-color);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-warning {
+            background-color: rgba(243, 156, 18, 0.2);
+            border-left: 4px solid var(--warning-color);
+            color: var(--text-light);
+        }
+
+        .alert-danger {
+            background-color: rgba(231, 76, 60, 0.2);
+            border-left: 4px solid var(--danger-color);
+            color: var(--text-light);
+        }
+
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 40px;
+            background-color: var(--primary-light);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--accent-color);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-medium);
+        }
+
+        .material-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .material-info h4 {
+            margin-bottom: 5px;
+            color: var(--text-light);
+        }
+
+        .material-info p {
+            color: var(--text-medium);
+            font-size: 0.9rem;
+        }
+
+        .material-stock {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stock-count {
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .page-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .budget-items {
+            margin-top: 30px;
+        }
+
+        .budget-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            align-items: center;
+        }
+
+        .budget-total {
+            text-align: right;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .nav-tabs {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-bottom: 5px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-title {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .budget-item {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Tela de Login -->
+    <div id="loginScreen" class="login-container">
+        <h2><i class="logo-icon">⚙️</i> Sistema de Engenharia</h2>
+        <div class="form-group">
+            <label for="loginEmail">E-mail</label>
+            <input type="email" id="loginEmail" class="form-control" placeholder="seu@email.com">
+        </div>
+        <div class="form-group">
+            <label for="loginPassword">Senha</label>
+            <input type="password" id="loginPassword" class="form-control" placeholder="Sua senha">
+        </div>
+        <button id="loginButton" class="btn btn-primary" style="width: 100%; margin-top: 20px;">Entrar</button>
+        <div id="loginError" class="alert alert-danger hidden">
+            <i>⚠️</i> <span id="errorText">Erro no login</span>
+        </div>
+    </div>
+
+    <!-- Sistema Principal (inicialmente oculto) -->
+    <div id="mainSystem" class="container hidden">
+        <header>
+            <div class="logo">
+                <i class="logo-icon">⚙️</i>
+                <h1>Sistema de Engenharia</h1>
+            </div>
+            <div class="user-info">
+                <span id="userEmail">usuário@empresa.com</span>
+                <button id="logoutButton" class="logout-btn">Sair</button>
+            </div>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="dashboard">Dashboard</button>
+            <button class="nav-tab" data-tab="clientes">Clientes</button>
+            <button class="nav-tab" data-tab="terceiros">Terceiros</button>
+            <button class="nav-tab" data-tab="funcionarios">Funcionários</button>
+            <button class="nav-tab" data-tab="materiais">Materiais</button>
+            <button class="nav-tab" data-tab="orcamento">Orçamento</button>
+            <button class="nav-tab" data-tab="contratos">Contratos</button>
+            <button class="nav-tab" data-tab="relatorios">Relatórios</button>
+        </nav>
+
+        <!-- Dashboard -->
+        <div id="dashboard" class="tab-content active">
+            <div class="page-title">
+                <h2><i>📊</i> Dashboard</h2>
+            </div>
+            
+            <div class="alert alert-warning" id="lowStockAlert">
+                <i>⚠️</i> <span id="alertText">Há materiais com estoque baixo!</span>
+            </div>
+            
+            <div class="card">
+                <h2><i>📈</i> Estatísticas</h2>
+                <div class="form-grid">
+                    <div>
+                        <h3>Total de Clientes</h3>
+                        <p id="totalClientes">0</p>
+                    </div>
+                    <div>
+                        <h3>Total de Materiais</h3>
+                        <p id="totalMateriais">0</p>
+                    </div>
+                    <div>
+                        <h3>Orçamentos Pendentes</h3>
+                        <p id="totalOrcamentos">0</p>
+                    </div>
+                    <div>
+                        <h3>Estoque Crítico</h3>
+                        <p id="estoqueCritico">0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i>⚠️</i> Materiais com Estoque Baixo</h2>
+                <div id="lowStockList"></div>
+            </div>
+        </div>
+
+        <!-- Cadastro de Clientes -->
+        <div id="clientes" class="tab-content">
+            <div class="page-title">
+                <h2><i>👥</i> Cadastro de Clientes</h2>
+                <button id="addClienteBtn" class="btn btn-primary">+ Novo Cliente</button>
+            </div>
+            
+            <div class="card">
+                <h2><i>📝</i> Formulário de Cliente</h2>
+                <form id="clienteForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="clienteNome">Nome Completo</label>
+                            <input type="text" id="clienteNome" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="clienteCpfCnpj">CPF/CNPJ</label>
+                            <input type="text" id="clienteCpfCnpj" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="clienteEmail">E-mail</label>
+                            <input type="email" id="clienteEmail" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="clienteTelefone">Telefone</label>
+                            <input type="text" id="clienteTelefone" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="clienteEndereco">Endereço</label>
+                            <input type="text" id="clienteEndereco" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="clienteCidade">Cidade</label>
+                            <input type="text" id="clienteCidade" class="form-control">
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-primary">Salvar Cliente</button>
+                        <button type="button" id="cancelClienteBtn" class="btn btn-secondary">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2><i>📋</i> Lista de Clientes</h2>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>CPF/CNPJ</th>
+                                <th>Telefone</th>
+                                <th>E-mail</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientesList">
+                            <!-- Lista de clientes será inserida aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cadastro de Terceiros -->
+        <div id="terceiros" class="tab-content">
+            <div class="page-title">
+                <h2><i>🤝</i> Cadastro de Terceiros</h2>
+                <button id="addTerceiroBtn" class="btn btn-primary">+ Novo Terceiro</button>
+            </div>
+            
+            <div class="card">
+                <h2><i>📝</i> Formulário de Terceiro</h2>
+                <form id="terceiroForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="terceiroNome">Nome/Razão Social</label>
+                            <input type="text" id="terceiroNome" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="terceiroCpfCnpj">CPF/CNPJ</label>
+                            <input type="text" id="terceiroCpfCnpj" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="terceiroEspecialidade">Especialidade</label>
+                            <input type="text" id="terceiroEspecialidade" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="terceiroContato">Contato</label>
+                            <input type="text" id="terceiroContato" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="terceiroValorHora">Valor Hora (R$)</label>
+                            <input type="number" step="0.01" id="terceiroValorHora" class="form-control">
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-primary">Salvar Terceiro</button>
+                        <button type="button" id="cancelTerceiroBtn" class="btn btn-secondary">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2><i>📋</i> Lista de Terceiros</h2>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>CPF/CNPJ</th>
+                                <th>Especialidade</th>
+                                <th>Contato</th>
+                                <th>Valor Hora</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="terceirosList">
+                            <!-- Lista de terceiros será inserida aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cadastro de Funcionários -->
+        <div id="funcionarios" class="tab-content">
+            <div class="page-title">
+                <h2><i>👷</i> Cadastro de Funcionários</h2>
+                <button id="addFuncionarioBtn" class="btn btn-primary">+ Novo Funcionário</button>
+            </div>
+            
+            <div class="card">
+                <h2><i>📝</i> Formulário de Funcionário</h2>
+                <form id="funcionarioForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="funcionarioNome">Nome Completo</label>
+                            <input type="text" id="funcionarioNome" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="funcionarioCpf">CPF</label>
+                            <input type="text" id="funcionarioCpf" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="funcionarioCargo">Cargo</label>
+                            <input type="text" id="funcionarioCargo" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="funcionarioSalario">Salário (R$)</label>
+                            <input type="number" step="0.01" id="funcionarioSalario" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="funcionarioDataAdmissao">Data de Admissão</label>
+                            <input type="date" id="funcionarioDataAdmissao" class="form-control">
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-primary">Salvar Funcionário</button>
+                        <button type="button" id="cancelFuncionarioBtn" class="btn btn-secondary">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2><i>📋</i> Lista de Funcionários</h2>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>CPF</th>
+                                <th>Cargo</th>
+                                <th>Salário</th>
+                                <th>Admissão</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="funcionariosList">
+                            <!-- Lista de funcionários será inserida aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cadastro de Materiais -->
+        <div id="materiais" class="tab-content">
+            <div class="page-title">
+                <h2><i>📦</i> Cadastro de Materiais</h2>
+                <button id="addMaterialBtn" class="btn btn-primary">+ Novo Material</button>
+            </div>
+            
+            <div class="card">
+                <h2><i>📝</i> Formulário de Material</h2>
+                <form id="materialForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="materialNome">Nome do Material</label>
+                            <input type="text" id="materialNome" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="materialCodigo">Código</label>
+                            <input type="text" id="materialCodigo" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="materialUnidade">Unidade de Medida</label>
+                            <select id="materialUnidade" class="form-control">
+                                <option value="un">Unidade</option>
+                                <option value="kg">Quilograma</option>
+                                <option value="m">Metro</option>
+                                <option value="m2">Metro Quadrado</option>
+                                <option value="m3">Metro Cúbico</option>
+                                <option value="l">Litro</option>
+                                <option value="cx">Caixa</option>
+                                <option value="pc">Peça</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="materialQuantidade">Quantidade em Estoque</label>
+                            <input type="number" id="materialQuantidade" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="materialMinimo">Quantidade Mínima</label>
+                            <input type="number" id="materialMinimo" class="form-control" value="30">
+                        </div>
+                        <div class="form-group">
+                            <label for="materialPreco">Preço Unitário (R$)</label>
+                            <input type="number" step="0.01" id="materialPreco" class="form-control">
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-primary">Salvar Material</button>
+                        <button type="button" id="cancelMaterialBtn" class="btn btn-secondary">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2><i>📋</i> Lista de Materiais</h2>
+                <div id="materialsListContainer">
+                    <!-- Lista de materiais será inserida aqui -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Orçamento -->
+        <div id="orcamento" class="tab-content">
+            <div class="page-title">
+                <h2><i>💰</i> Orçamento</h2>
+                <button id="printOrcamentoBtn" class="btn btn-primary">Imprimir PDF</button>
+            </div>
+            
+            <div class="card">
+                <h2><i>📝</i> Dados do Orçamento</h2>
+                <form id="orcamentoForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="orcamentoCliente">Cliente</label>
+                            <select id="orcamentoCliente" class="form-control" required>
+                                <option value="">Selecione um cliente</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="orcamentoData">Data</label>
+                            <input type="date" id="orcamentoData" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="orcamentoValidade">Validade (dias)</label>
+                            <input type="number" id="orcamentoValidade" class="form-control" value="30">
+                        </div>
+                        <div class="form-group">
+                            <label for="orcamentoDescricao">Descrição do Serviço</label>
+                            <textarea id="orcamentoDescricao" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2><i>➕</i> Adicionar Item ao Orçamento</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="itemMaterial">Material/Serviço</label>
+                        <select id="itemMaterial" class="form-control">
+                            <option value="">Selecione um material</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemQuantidade">Quantidade</label>
+                        <input type="number" id="itemQuantidade" class="form-control" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="itemUnidade">Unidade</label>
+                        <input type="text" id="itemUnidade" class="form-control" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemPreco">Preço Unitário (R$)</label>
+                        <input type="number" step="0.01" id="itemPreco" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="itemTotal">Total (R$)</label>
+                        <input type="text" id="itemTotal" class="form-control" readonly>
+                    </div>
+                    <div class="form-group" style="align-self: flex-end;">
+                        <button type="button" id="addItemBtn" class="btn btn-primary">Adicionar Item</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i>📋</i> Itens do Orçamento</h2>
+                <div id="orcamentoItems">
+                    <!-- Itens do orçamento serão inseridos aqui -->
+                </div>
+                <div class="budget-total">
+                    Total do Orçamento: R$ <span id="orcamentoTotal">0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contratos -->
+        <div id="contratos" class="tab-content">
+            <div class="page-title">
+                <h2><i>📄</i> Contratos</h2>
+                <button id="gerarContratoBtn" class="btn btn-primary">Gerar Novo Contrato</button>
+            </div>
+            
+            <div class="card">
+                <h2><i>📝</i> Gerar Contrato</h2>
+                <form id="contratoForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="contratoCliente">Cliente</label>
+                            <select id="contratoCliente" class="form-control" required>
+                                <option value="">Selecione um cliente</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="contratoTerceiro">Terceiro (opcional)</label>
+                            <select id="contratoTerceiro" class="form-control">
+                                <option value="">Selecione um terceiro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="contratoData">Data do Contrato</label>
+                            <input type="date" id="contratoData" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contratoValor">Valor Total (R$)</label>
+                            <input type="number" step="0.01" id="contratoValor" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contratoPrazo">Prazo de Execução (dias)</label>
+                            <input type="number" id="contratoPrazo" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contratoDescricao">Descrição dos Serviços</label>
+                            <textarea id="contratoDescricao" class="form-control" rows="4"></textarea>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-primary">Gerar Contrato PDF</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2><i>📋</i> Contratos Gerados</h2>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Data</th>
+                                <th>Valor</th>
+                                <th>Prazo</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contratosList">
+                            <!-- Lista de contratos será inserida aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relatórios -->
+        <div id="relatorios" class="tab-content">
+            <div class="page-title">
+                <h2><i>📊</i> Relatórios</h2>
+                <button id="printRelatorioBtn" class="btn btn-primary">Imprimir Relatório</button>
+            </div>
+            
+            <div class="card">
+                <h2><i>📦</i> Relatório de Materiais</h2>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Material</th>
+                                <th>Código</th>
+                                <th>Unidade</th>
+                                <th>Estoque Atual</th>
+                                <th>Estoque Mínimo</th>
+                                <th>Preço Unitário</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="relatorioMateriais">
+                            <!-- Relatório de materiais será inserido aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZbMGQrZSwWkDnygFH59QYikHbcBNGzpM",
+            authDomain: "engenharia-99675.firebaseapp.com",
+            projectId: "engenharia-99675",
+            storageBucket: "engenharia-996basestorage.app",
+            messagingSenderId: "1093040178852",
+            appId: "1:1093040178852:web:d44998e39b8edf94bd8831",
+            measurementId: "G-ZP0C3X38VV"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Estado da aplicação
+        let currentUser = null;
+        let editingId = null;
+        let orcamentoItems = [];
+        let selectedMaterial = null;
+
+        // Funções de autenticação
+        document.getElementById('loginButton').addEventListener('click', () => {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    currentUser = userCredential.user;
+                    showMainSystem();
+                })
+                .catch((error) => {
+                    showLoginError(error.message);
+                });
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            auth.signOut().then(() => {
+                currentUser = null;
+                showLoginScreen();
+            });
+        });
+
+        // Verificar se o usuário já está logado
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                showMainSystem();
+            } else {
+                showLoginScreen();
+            }
+        });
+
+        function showLoginScreen() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('mainSystem').classList.add('hidden');
+        }
+
+        function showMainSystem() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainSystem').classList.remove('hidden');
+            document.getElementById('userEmail').textContent = currentUser.email;
+            loadDashboardData();
+            loadClientes();
+            loadTerceiros();
+            loadFuncionarios();
+            loadMateriais();
+            loadClientesForSelect();
+            loadMateriaisForSelect();
+            loadTerceirosForSelect();
+        }
+
+        function showLoginError(message) {
+            const errorDiv = document.getElementById('loginError');
+            document.getElementById('errorText').textContent = message;
+            errorDiv.classList.remove('hidden');
+            setTimeout(() => errorDiv.classList.add('hidden'), 5000);
+        }
+
+        // Navegação entre abas
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                // Atualizar aba ativa
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Mostrar conteúdo da aba
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabId).classList.add('active');
+                
+                // Carregar dados específicos se necessário
+                if (tabId === 'dashboard') loadDashboardData();
+                if (tabId === 'relatorios') loadRelatorioMateriais();
+            });
+        });
+
+        // Carregar dados do dashboard
+        async function loadDashboardData() {
+            try {
+                // Contar clientes
+                const clientesSnapshot = await db.collection('clientes').get();
+                document.getElementById('totalClientes').textContent = clientesSnapshot.size;
+                
+                // Contar materiais
+                const materiaisSnapshot = await db.collection('materiais').get();
+                document.getElementById('totalMateriais').textContent = materiaisSnapshot.size;
+                
+                // Contar materiais com estoque baixo
+                let estoqueCritico = 0;
+                let lowStockItems = [];
+                
+                materiaisSnapshot.forEach(doc => {
+                    const material = doc.data();
+                    if (material.quantidade < material.minimo) {
+                        estoqueCritico++;
+                        lowStockItems.push({...material, id: doc.id});
+                    }
+                });
+                
+                document.getElementById('estoqueCritico').textContent = estoqueCritico;
+                
+                // Mostrar alerta se houver estoque crítico
+                const alertDiv = document.getElementById('lowStockAlert');
+                if (estoqueCritico > 0) {
+                    alertDiv.classList.remove('hidden');
+                    document.getElementById('alertText').textContent = 
+                        `Há ${estoqueCritico} material(is) com estoque abaixo do mínimo!`;
+                } else {
+                    alertDiv.classList.add('hidden');
+                }
+                
+                // Mostrar lista de materiais com estoque baixo
+                const lowStockList = document.getElementById('lowStockList');
+                lowStockList.innerHTML = '';
+                
+                lowStockItems.forEach(material => {
+                    const item = document.createElement('div');
+                    item.className = 'material-item';
+                    item.innerHTML = `
+                        <div class="material-info">
+                            <h4>${material.nome}</h4>
+                            <p>Código: ${material.codigo} | Unidade: ${material.unidade}</p>
+                        </div>
+                        <div class="material-stock">
+                            <span class="stock-count" style="color: var(--danger-color);">${material.quantidade}</span>
+                            <div class="status-indicator status-low"></div>
+                        </div>
+                    `;
+                    lowStockList.appendChild(item);
+                });
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados do dashboard:', error);
+            }
+        }
+
+        // ========== CLIENTES ==========
+        document.getElementById('addClienteBtn').addEventListener('click', () => {
+            document.getElementById('clienteForm').reset();
+            editingId = null;
+        });
+
+        document.getElementById('cancelClienteBtn').addEventListener('click', () => {
+            document.getElementById('clienteForm').reset();
+            editingId = null;
+        });
+
+        document.getElementById('clienteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const clienteData = {
+                nome: document.getElementById('clienteNome').value,
+                cpfCnpj: document.getElementById('clienteCpfCnpj').value,
+                email: document.getElementById('clienteEmail').value,
+                telefone: document.getElementById('clienteTelefone').value,
+                endereco: document.getElementById('clienteEndereco').value,
+                cidade: document.getElementById('clienteCidade').value,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            try {
+                if (editingId) {
+                    await db.collection('clientes').doc(editingId).update(clienteData);
+                } else {
+                    await db.collection('clientes').add(clienteData);
+                }
+                
+                document.getElementById('clienteForm').reset();
+                editingId = null;
+                loadClientes();
+                loadClientesForSelect();
+                loadDashboardData();
+            } catch (error) {
+                console.error('Erro ao salvar cliente:', error);
+                alert('Erro ao salvar cliente: ' + error.message);
+            }
+        });
+
+        async function loadClientes() {
+            try {
+                const snapshot = await db.collection('clientes').orderBy('nome').get();
+                const tbody = document.getElementById('clientesList');
+                tbody.innerHTML = '';
+                
+                snapshot.forEach(doc => {
+                    const cliente = doc.data();
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${cliente.nome}</td>
+                        <td>${cliente.cpfCnpj}</td>
+                        <td>${cliente.telefone || '-'}</td>
+                        <td>${cliente.email || '-'}</td>
+                        <td>
+                            <button onclick="editCliente('${doc.id}')" class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.9rem;">Editar</button>
+                            <button onclick="deleteCliente('${doc.id}')" class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.9rem; background-color: var(--danger-color);">Excluir</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar clientes:', error);
+            }
+        }
+
+        async function editCliente(id) {
+            try {
+                const doc = await db.collection('clientes').doc(id).get();
+                if (doc.exists) {
+                    const cliente = doc.data();
+                    document.getElementById('clienteNome').value = cliente.nome || '';
+                    document.getElementById('clienteCpfCnpj').value = cliente.cpfCnpj || '';
+                    document.getElementById('clienteEmail').value = cliente.email || '';
+                    document.getElementById('clienteTelefone').value = cliente.telefone || '';
+                    document.getElementById('clienteEndereco').value = cliente.endereco || '';
+                    document.getElementById('clienteCidade').value = cliente.cidade || '';
+                    editingId = id;
+                    
+                    // Rolar para o formulário
+                    document.querySelector('[data-tab="clientes"]').click();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar cliente:', error);
+            }
+        }
+
+        async function deleteCliente(id) {
+            if (confirm('Tem certeza que deseja excluir este cliente?')) {
+                try {
+                    await db.collection('clientes').doc(id).delete();
+                    loadClientes();
+                    loadClientesForSelect();
+                    loadDashboardData();
+                } catch (error) {
+                    console.error('Erro ao excluir cliente:', error);
+                }
+            }
+        }
+
+        async function loadClientesForSelect() {
+            try {
+                const snapshot = await db.collection('clientes').orderBy('nome').get();
+                const select = document.getElementById('orcamentoCliente');
+                const selectContrato = document.getElementById('contratoCliente');
+                
+                select.innerHTML = '<option value="">Selecione um cliente</option>';
+                selectContrato.innerHTML = '<option value="">Selecione um cliente</option>';
+                
+                snapshot.forEach(doc => {
+                    const cliente = doc.data();
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = cliente.nome + ' - ' + cliente.cpfCnpj;
+                    
+                    select.appendChild(option.cloneNode(true));
+                    selectContrato.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar clientes para select:', error);
+            }
+        }
+
+        // ========== TERCEIROS ==========
+        // (Implementação similar à de clientes)
+
+        // ========== FUNCIONÁRIOS ==========
+        // (Implementação similar à de clientes)
+
+        // ========== MATERIAIS ==========
+        document.getElementById('addMaterialBtn').addEventListener('click', () => {
+            document.getElementById('materialForm').reset();
+            document.getElementById('materialMinimo').value = 30;
+            editingId = null;
+        });
+
+        document.getElementById('cancelMaterialBtn').addEventListener('click', () => {
+            document.getElementById('materialForm').reset();
+            editingId = null;
+        });
+
+        document.getElementById('materialForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const materialData = {
+                nome: document.getElementById('materialNome').value,
+                codigo: document.getElementById('materialCodigo').value,
+                unidade: document.getElementById('materialUnidade').value,
+                quantidade: parseInt(document.getElementById('materialQuantidade').value),
+                minimo: parseInt(document.getElementById('materialMinimo').value),
+                preco: parseFloat(document.getElementById('materialPreco').value) || 0,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            try {
+                if (editingId) {
+                    await db.collection('materiais').doc(editingId).update(materialData);
+                } else {
+                    await db.collection('materiais').add(materialData);
+                }
+                
+                document.getElementById('materialForm').reset();
+                editingId = null;
+                loadMateriais();
+                loadMateriaisForSelect();
+                loadDashboardData();
+            } catch (error) {
+                console.error('Erro ao salvar material:', error);
+                alert('Erro ao salvar material: ' + error.message);
+            }
+        });
+
+        async function loadMateriais() {
+            try {
+                const snapshot = await db.collection('materiais').orderBy('nome').get();
+                const container = document.getElementById('materialsListContainer');
+                container.innerHTML = '';
+                
+                snapshot.forEach(doc => {
+                    const material = doc.data();
+                    const statusClass = material.quantidade >= material.minimo ? 'status-high' : 'status-low';
+                    const statusColor = material.quantidade >= material.minimo ? 'var(--accent-color)' : 'var(--danger-color)';
+                    
+                    const item = document.createElement('div');
+                    item.className = 'material-item';
+                    item.innerHTML = `
+                        <div class="material-info">
+                            <h4>${material.nome} (${material.codigo})</h4>
+                            <p>Unidade: ${material.unidade} | Preço: R$ ${material.preco.toFixed(2)}</p>
+                        </div>
+                        <div class="material-stock">
+                            <span class="stock-count" style="color: ${statusColor};">${material.quantidade}</span>
+                            <div class="status-indicator ${statusClass}"></div>
+                            <div>
+                                <button onclick="editMaterial('${doc.id}')" class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.9rem; margin-left: 10px;">Editar</button>
+                                <button onclick="deleteMaterial('${doc.id}')" class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.9rem; background-color: var(--danger-color);">Excluir</button>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar materiais:', error);
+            }
+        }
+
+        async function editMaterial(id) {
+            try {
+                const doc = await db.collection('materiais').doc(id).get();
+                if (doc.exists) {
+                    const material = doc.data();
+                    document.getElementById('materialNome').value = material.nome || '';
+                    document.getElementById('materialCodigo').value = material.codigo || '';
+                    document.getElementById('materialUnidade').value = material.unidade || 'un';
+                    document.getElementById('materialQuantidade').value = material.quantidade || 0;
+                    document.getElementById('materialMinimo').value = material.minimo || 30;
+                    document.getElementById('materialPreco').value = material.preco || 0;
+                    editingId = id;
+                    
+                    // Rolar para o formulário
+                    document.querySelector('[data-tab="materiais"]').click();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar material:', error);
+            }
+        }
+
+        async function deleteMaterial(id) {
+            if (confirm('Tem certeza que deseja excluir este material?')) {
+                try {
+                    await db.collection('materiais').doc(id).delete();
+                    loadMateriais();
+                    loadMateriaisForSelect();
+                    loadDashboardData();
+                } catch (error) {
+                    console.error('Erro ao excluir material:', error);
+                }
+            }
+        }
+
+        async function loadMateriaisForSelect() {
+            try {
+                const snapshot = await db.collection('materiais').orderBy('nome').get();
+                const select = document.getElementById('itemMaterial');
+                
+                select.innerHTML = '<option value="">Selecione um material</option>';
+                
+                snapshot.forEach(doc => {
+                    const material = doc.data();
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = `${material.nome} (${material.codigo}) - Estoque: ${material.quantidade} ${material.unidade}`;
+                    option.dataset.material = JSON.stringify(material);
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar materiais para select:', error);
+            }
+        }
+
+        // ========== ORÇAMENTO ==========
+        document.getElementById('itemMaterial').addEventListener('change', (e) => {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            if (selectedOption.value) {
+                const material = JSON.parse(selectedOption.dataset.material);
+                selectedMaterial = material;
+                document.getElementById('itemUnidade').value = material.unidade;
+                document.getElementById('itemPreco').value = material.preco;
+                calculateItemTotal();
+            } else {
+                selectedMaterial = null;
+                document.getElementById('itemUnidade').value = '';
+                document.getElementById('itemPreco').value = '';
+                document.getElementById('itemTotal').value = '';
+            }
+        });
+
+        document.getElementById('itemQuantidade').addEventListener('input', calculateItemTotal);
+        document.getElementById('itemPreco').addEventListener('input', calculateItemTotal);
+
+        function calculateItemTotal() {
+            const quantidade = parseFloat(document.getElementById('itemQuantidade').value) || 0;
+            const preco = parseFloat(document.getElementById('itemPreco').value) || 0;
+            const total = quantidade * preco;
+            document.getElementById('itemTotal').value = total.toFixed(2);
+        }
+
+        document.getElementById('addItemBtn').addEventListener('click', () => {
+            const quantidade = parseFloat(document.getElementById('itemQuantidade').value) || 0;
+            const preco = parseFloat(document.getElementById('itemPreco').value) || 0;
+            
+            if (!selectedMaterial || quantidade <= 0) {
+                alert('Selecione um material e informe uma quantidade válida');
+                return;
+            }
+            
+            const item = {
+                materialId: document.getElementById('itemMaterial').value,
+                nome: selectedMaterial.nome,
+                codigo: selectedMaterial.codigo,
+                unidade: selectedMaterial.unidade,
+                quantidade: quantidade,
+                preco: preco,
+                total: quantidade * preco
+            };
+            
+            orcamentoItems.push(item);
+            updateOrcamentoList();
+            
+            // Limpar campos
+            document.getElementById('itemMaterial').value = '';
+            document.getElementById('itemQuantidade').value = 1;
+            document.getElementById('itemUnidade').value = '';
+            document.getElementById('itemPreco').value = '';
+            document.getElementById('itemTotal').value = '';
+            selectedMaterial = null;
+        });
+
+        function updateOrcamentoList() {
+            const container = document.getElementById('orcamentoItems');
+            container.innerHTML = '';
+            
+            let total = 0;
+            
+            orcamentoItems.forEach((item, index) => {
+                total += item.total;
+                
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'budget-item';
+                itemDiv.innerHTML = `
+                    <div>${item.nome} (${item.codigo})</div>
+                    <div>${item.quantidade}</div>
+                    <div>${item.unidade}</div>
+                    <div>R$ ${item.preco.toFixed(2)}</div>
+                    <div>R$ ${item.total.toFixed(2)}</div>
+                    <div>
+                        <button onclick="removeOrcamentoItem(${index})" class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.9rem; background-color: var(--danger-color);">Remover</button>
+                    </div>
+                `;
+                container.appendChild(itemDiv);
+            });
+            
+            document.getElementById('orcamentoTotal').textContent = total.toFixed(2);
+        }
+
+        function removeOrcamentoItem(index) {
+            orcamentoItems.splice(index, 1);
+            updateOrcamentoList();
+        }
+
+        document.getElementById('printOrcamentoBtn').addEventListener('click', () => {
+            if (orcamentoItems.length === 0) {
+                alert('Adicione itens ao orçamento antes de imprimir');
+                return;
+            }
+            
+            // Aqui você implementaria a geração de PDF
+            // Por enquanto, apenas simulação
+            const cliente = document.getElementById('orcamentoCliente').options[document.getElementById('orcamentoCliente').selectedIndex].text;
+            const data = document.getElementById('orcamentoData').value;
+            const descricao = document.getElementById('orcamentoDescricao').value;
+            const total = document.getElementById('orcamentoTotal').textContent;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Orçamento - ${cliente}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        h1 { color: #333; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                        th { background-color: #f4f4f4; }
+                        .total { font-weight: bold; font-size: 1.2em; }
+                        @media print { button { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <h1>Orçamento</h1>
+                    <p><strong>Cliente:</strong> ${cliente}</p>
+                    <p><strong>Data:</strong> ${data}</p>
+                    <p><strong>Descrição:</strong> ${descricao}</p>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Material/Serviço</th>
+                                <th>Quantidade</th>
+                                <th>Unidade</th>
+                                <th>Preço Unitário</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orcamentoItems.map(item => `
+                                <tr>
+                                    <td>${item.nome} (${item.codigo})</td>
+                                    <td>${item.quantidade}</td>
+                                    <td>${item.unidade}</td>
+                                    <td>R$ ${item.preco.toFixed(2)}</td>
+                                    <td>R$ ${item.total.toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    
+                    <div class="total">Total do Orçamento: R$ ${total}</div>
+                    
+                    <br><br>
+                    <button onclick="window.print()">Imprimir</button>
+                    <button onclick="window.close()">Fechar</button>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        });
+
+        // ========== CONTRATOS ==========
+        async function loadTerceirosForSelect() {
+            try {
+                const snapshot = await db.collection('terceiros').orderBy('nome').get();
+                const select = document.getElementById('contratoTerceiro');
+                
+                select.innerHTML = '<option value="">Selecione um terceiro</option>';
+                
+                snapshot.forEach(doc => {
+                    const terceiro = doc.data();
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = terceiro.nome + ' - ' + terceiro.especialidade;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar terceiros para select:', error);
+            }
+        }
+
+        document.getElementById('contratoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const clienteId = document.getElementById('contratoCliente').value;
+            const terceiroId = document.getElementById('contratoTerceiro').value;
+            const clienteDoc = await db.collection('clientes').doc(clienteId).get();
+            const cliente = clienteDoc.data();
+            
+            let terceiro = null;
+            if (terceiroId) {
+                const terceiroDoc = await db.collection('terceiros').doc(terceiroId).get();
+                terceiro = terceiroDoc.data();
+            }
+            
+            const contratoData = {
+                cliente: cliente.nome,
+                clienteId: clienteId,
+                terceiro: terceiro ? terceiro.nome : '',
+                terceiroId: terceiroId || '',
+                data: document.getElementById('contratoData').value,
+                valor: parseFloat(document.getElementById('contratoValor').value),
+                prazo: parseInt(document.getElementById('contratoPrazo').value),
+                descricao: document.getElementById('contratoDescricao').value,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            try {
+                await db.collection('contratos').add(contratoData);
+                
+                // Gerar PDF do contrato
+                gerarContratoPDF(contratoData, cliente, terceiro);
+                
+                document.getElementById('contratoForm').reset();
+                loadContratos();
+            } catch (error) {
+                console.error('Erro ao salvar contrato:', error);
+                alert('Erro ao gerar contrato: ' + error.message);
+            }
+        });
+
+        function gerarContratoPDF(contrato, cliente, terceiro) {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Contrato - ${cliente.nome}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 40px; line-height: 1.6; }
+                        h1 { text-align: center; color: #333; }
+                        .header { margin-bottom: 40px; }
+                        .partes { margin: 30px 0; }
+                        .partes h3 { border-bottom: 2px solid #333; padding-bottom: 5px; }
+                        .content { margin: 30px 0; }
+                        .assinaturas { margin-top: 100px; display: flex; justify-content: space-around; }
+                        .assinatura { text-align: center; width: 300px; }
+                        .linha { border-top: 1px solid #333; margin-top: 50px; padding-top: 10px; }
+                        @media print { button { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</h1>
+                        <p style="text-align: center;">Contrato Nº: ${Date.now()}</p>
+                    </div>
+                    
+                    <div class="partes">
+                        <h3>PARTES CONTRATANTES</h3>
+                        <p><strong>CONTRATANTE:</strong> ${cliente.nome}, ${cliente.cpfCnpj}, ${cliente.endereco || ''}, ${cliente.cidade || ''}</p>
+                        ${terceiro ? `<p><strong>TERCEIRO CONTRATADO:</strong> ${terceiro.nome}, ${terceiro.cpfCnpj}, ${terceiro.especialidade}</p>` : ''}
+                        <p><strong>DATA DO CONTRATO:</strong> ${contrato.data}</p>
+                        <p><strong>PRAZO DE EXECUÇÃO:</strong> ${contrato.prazo} dias</p>
+                        <p><strong>VALOR TOTAL:</strong> R$ ${contrato.valor.toFixed(2)}</p>
+                    </div>
+                    
+                    <div class="content">
+                        <h3>DESCRIÇÃO DOS SERVIÇOS</h3>
+                        <p>${contrato.descricao.replace(/\n/g, '<br>')}</p>
+                    </div>
+                    
+                    <div class="assinaturas">
+                        <div class="assinatura">
+                            <div class="linha"></div>
+                            <p>${cliente.nome}</p>
+                            <p>Contratante</p>
+                        </div>
+                        
+                        <div class="assinatura">
+                            <div class="linha"></div>
+                            <p>Representante da Empresa</p>
+                            <p>Contratada</p>
+                        </div>
+                    </div>
+                    
+                    <br><br>
+                    <div style="text-align: center;">
+                        <button onclick="window.print()">Imprimir Contrato</button>
+                        <button onclick="window.close()">Fechar</button>
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        async function loadContratos() {
+            try {
+                const snapshot = await db.collection('contratos').orderBy('createdAt', 'desc').get();
+                const tbody = document.getElementById('contratosList');
+                tbody.innerHTML = '';
+                
+                snapshot.forEach(doc => {
+                    const contrato = doc.data();
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${contrato.cliente}</td>
+                        <td>${contrato.data}</td>
+                        <td>R$ ${contrato.valor.toFixed(2)}</td>
+                        <td>${contrato.prazo} dias</td>
+                        <td>
+                            <button onclick="viewContrato('${doc.id}')" class="btn btn-secondary" style="padding: 5px 10px; font-size: 0.9rem;">Ver</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar contratos:', error);
+            }
+        }
+
+        // ========== RELATÓRIOS ==========
+        async function loadRelatorioMateriais() {
+            try {
+                const snapshot = await db.collection('materiais').orderBy('nome').get();
+                const tbody = document.getElementById('relatorioMateriais');
+                tbody.innerHTML = '';
+                
+                snapshot.forEach(doc => {
+                    const material = doc.data();
+                    const status = material.quantidade >= material.minimo ? 
+                        `<span style="color: var(--accent-color);">● Normal</span>` : 
+                        `<span style="color: var(--danger-color);">● Baixo</span>`;
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${material.nome}</td>
+                        <td>${material.codigo}</td>
+                        <td>${material.unidade}</td>
+                        <td>${material.quantidade}</td>
+                        <td>${material.minimo}</td>
+                        <td>R$ ${material.preco.toFixed(2)}</td>
+                        <td>${status}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar relatório:', error);
+            }
+        }
+
+        document.getElementById('printRelatorioBtn').addEventListener('click', () => {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Relatório de Materiais</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        h1 { color: #333; text-align: center; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                        th { background-color: #f4f4f4; }
+                        .baixo { color: red; }
+                        .normal { color: green; }
+                        @media print { button { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <h1>Relatório de Materiais em Estoque</h1>
+                    <p><strong>Data:</strong> ${new Date().toLocaleDateString()}</p>
+                    
+                    ${document.getElementById('relatorioMateriais').outerHTML}
+                    
+                    <br><br>
+                    <button onclick="window.print()">Imprimir Relatório</button>
+                    <button onclick="window.close()">Fechar</button>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        });
+
+        // Data atual nos campos de data
+        document.getElementById('orcamentoData').valueAsDate = new Date();
+        document.getElementById('contratoData').valueAsDate = new Date();
+        document.getElementById('funcionarioDataAdmissao').valueAsDate = new Date();
+
+        // Inicialização
+        console.log('Sistema de Engenharia inicializado!');
+    </script>
+</body>
+</html>
